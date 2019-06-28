@@ -1,0 +1,109 @@
+Sql文件在压缩包中，后台用idea打开运行即可，可能需要导入给的json包
+需要在数据库中新建账号（全权限），用户名Android，密码Android
+
+ 
+接口有
+GetCart	获取购物车信息
+UpdateCart	更新购物车
+SearchC	读取商品信息
+Address	地址
+
+一．	Address
+必须有请求信息action=add 或 delete 表示增加或删除地址，
+然后跟着请求信息，username表示用户名，tel表示电话，address表示地址
+
+请求方法如下：
+①	构造url
+String url = "http://10.0.2.2:8080/Address";
+final String username = mEtUsername.getText().toString();
+final String address = mEtAddress.getText().toString();
+final String tel = mEtTel.getText().toString();
+final action = “add”//(或者delete)
+url=url+"?username="+username+"&address="+pwd+”&tel=”+tel+”&action=”+action;//构造get链接
+
+OkHttpClient okHttpClient = new OkHttpClient();
+final Request request = new Request.Builder()
+        .url(url)
+        .get()//默认就是GET请求，可以不写
+        .build();
+Call call = okHttpClient.newCall(request);
+call.enqueue(new Callback() {
+    @Override
+    public void onFailure(Call call, IOException e) {//网络请求失败，不用管
+        //转到主线程再使用Toast，否则会程序崩溃
+        runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                Toast.makeText(MainActivity.this,"网络连接失败，请检查网络设置",Toast.LENGTH_SHORT).show();
+            }
+        });
+    }//连接网络失败
+
+
+    /*
+
+    此处为请求成功，解析返回的json数据
+
+     */
+    @Override
+    public void onResponse(Call call, Response response) throws IOException {
+        String jsonString = response.body().string();
+        try {
+            JSONObject a = new JSONObject(jsonString);
+            String flag = a.get("status").toString();
+
+            if(flag.equals("success")){
+
+                //执行成功
+               // 填充执行函数
+            }else {
+//执行失败
+                //转到主线程再使用Toast，否则会程序崩溃
+                runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        Toast.makeText(MainActivity.this,"账号或密码错误",Toast.LENGTH_SHORT).show();
+                    }
+                });
+
+            }
+
+        }catch (JSONException e){
+            System.out.println(e.toString());
+        }
+
+
+    }
+});
+②	构造post
+OkHttpClient okHttpClient = new OkHttpClient();
+String url = "http://10.0.2.2:8080/Address";
+final String username = mEtUsername.getText().toString();
+final String address = mEtAddress.getText().toString();
+final String tel = mEtTel.getText().toString();
+final action = “add”//(或者delete)
+//构造提交表单
+HashMap<String,String> paramsMap=new HashMap<>();
+paramsMap.put("username",username);
+paramsMap.put("address",address);
+paramsMap.put("tel",tel); 
+paramsMap.put("action",action);
+
+FormBody.Builder builder = new FormBody.Builder();
+for (String key : paramsMap.keySet()) {
+    //追加表单信息
+    builder.add(key, paramsMap.get(key));
+}
+
+RequestBody requestBody=builder.build();
+Request request = new Request.Builder()
+        .url(url)
+        .post(requestBody)
+        .build();
+后面的上面一样
+
+其他的接口情况和上面一样，参照写即可
+Commodity返回的json数组，需要JsonObject和JsonArray解析
+
+
+
